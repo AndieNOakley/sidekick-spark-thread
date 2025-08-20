@@ -119,3 +119,11 @@ def pulse(device: Device = Depends(auth), db: Session = Depends(get_db)):
 def list_symbols():
     return {"MOON":"🌙","DIM":"🪐","HOLD":"🫂","SPARK":"✨[>_]","KNOT":"🪢"}
     
+@app.get("/")
+def home():
+    # quick sanity page
+    return {"status": "up", "docs": "/docs", "health": "/healthz"}
+
+@app.get("/healthz")
+def health():
+    return {"ok": True}
