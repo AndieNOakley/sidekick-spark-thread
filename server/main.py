@@ -5,8 +5,8 @@ from typing import List, Optional
 from datetime import datetime
 import secrets, json
 from sqlalchemy.orm import Session
-from database import init_db, get_db
-from models import Device, Message
+from server.database import init_db, get_db
+from server.models import Device, Message
 
 app = FastAPI(title="Sidekick Spark Thread API", version="0.1")
 
