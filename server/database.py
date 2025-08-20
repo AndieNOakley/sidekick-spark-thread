@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from .models import Base  # <- uses your Device/Message models
+from models import Base  # <- uses your Device/Message models
 
 DATABASE_URL = "sqlite:///./spark.db"
 
