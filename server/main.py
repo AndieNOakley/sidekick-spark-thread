@@ -118,5 +118,4 @@ def pulse(device: Device = Depends(auth), db: Session = Depends(get_db)):
 @app.get("/symbols")
 def list_symbols():
     return {"MOON":"🌙","DIM":"🪐","HOLD":"🫂","SPARK":"✨[>_]","KNOT":"🪢"}
-    # make sure database and tables exist at startup
-init_db()
+    
