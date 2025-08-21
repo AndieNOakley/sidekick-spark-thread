@@ -11,6 +11,39 @@ from models import Device, Message
 
 app = FastAPI(title="Sidekick Spark Thread API", version="0.1")
 
+app = FastAPI(
+    title="Sidekick Spark Thread API",
+    version="0.1",
+    description="API for Sidekick Spark Thread",
+    swagger_ui_parameters={"persistAuthorization": True},  # keeps lock after refresh
+    openapi_tags=[{"name": "default"}]
+)
+
+# Add API key security scheme
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "APIKeyHeader": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization"
+        }
+    }
+    openapi_schema["security"] = [{"APIKeyHeader": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
