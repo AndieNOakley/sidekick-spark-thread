@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sidekick Spark</title>
+<style>
+  :root { --bg:#0b0f16; --bubble:#1a2230; --text:#ffd979; --muted:#9aa4b2; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:16px 20px; font-size:22px; letter-spacing:.5px; border-bottom:1px solid #243041; }
+  .wrap { max-width:720px; margin:0 auto; height:100svh; display:flex; flex-direction:column; }
+  #log { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .msg { max-width:78%; padding:14px 16px; border-radius:16px; line-height:1.4; background:var(--bubble); box-shadow:0 0 0 1px #243041 inset; }
+  .me   { align-self:flex-end; background:#2a3549; }
+  .sys  { align-self:center; font-size:12px; color:var(--muted); background:transparent; box-shadow:none; }
+  form { display:flex; gap:8px; padding:12px; border-top:1px solid #243041; }
+  input, button { font-size:16px; }
+  input[type=text] { flex:1; padding:12px 14px; border-radius:12px; border:1px solid #243041; background:#101722; color:#e8ecf1; }
+  button { padding:12px 16px; border-radius:12px; border:1px solid #243041; background:#1e2838; color:#ffd979; }
+  .bar { display:flex; gap:8px; padding:12px; border-bottom:1px solid #243041; }
+  .bar input { width:100%; }
+  small { color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>Sidekick Spark</header>
+
+  <!-- one-time “register” to get a token -->
+  <div class="bar">
+    <input id="device" type="text" placeholder="device id (e.g., andies-iphone)" />
+    <button id="btnRegister" type="button">Register</button>
+    <small id="tokStatus"></small>
+  </div>
+
+  <!-- messages -->
+  <div id="log"></div>
+
+  <!-- send -->
+  <form id="sendForm" autocomplete="off">
+    <input id="text" type="text" placeholder="Type a message…" />
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+const API = "https://sidekickspark.com";              // your custom domain (FastAPI lives here)
+const STORAGE_KEY = "spark_access_token";
+const log = document.getElementById("log");
+const tokStatus = document.getElementById("tokStatus");
+const deviceInput = document.getElementById("device");
+const textInput = document.getElementById("text");
+
+// Load saved token (if you registered earlier)
+let ACCESS_TOKEN = localStorage.getItem(STORAGE_KEY) || "";
+tokStatus.textContent = ACCESS_TOKEN ? "token loaded" : "no token yet";
+
+// Helpers
+function bubble(text, who="them") {
+  const div = document.createElement("div");
+  div.className = "msg " + (who === "me" ? "me" : who === "sys" ? "sys" : "");
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function register() {
+  const device_id = deviceInput.value.trim() || "andies-iphone";
+  bubble(`Registering device: ${device_id} …`, "sys");
+  const res = await fetch(`${API}/auth/register`, {
+    method: "POST",
+    headers: { "accept":"application/json", "content-type":"application/json" },
+    body: JSON.stringify({ device_id, public_key: null })
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    bubble(`Register failed: ${res.status} ${t}`, "sys");
+    tokStatus.textContent = "register failed";
+    return;
+  }
+  const data = await res.json();     // { access_token: "..." }
+  ACCESS_TOKEN = data.access_token;
+  localStorage.setItem(STORAGE_KEY, ACCESS_TOKEN);
+  tokStatus.textContent = "token saved";
+  bubble("Registered ✅ token saved", "sys");
+}
+
+async function sendMessage(text) {
+  if (!ACCESS_TOKEN) { bubble("No token — tap Register first.", "sys"); return; }
+  const device_id = deviceInput.value.trim() || "andies-iphone";
+  bubble(text, "me");
+  const res = await fetch(`${API}/messages/send`, {
+    method: "POST",
+    headers: {
+      "accept":"application/json",
+      "content-type":"application/json",
+      // 👇 this fixes the “Missing token” 401
+      "authorization": `Bearer ${ACCESS_TOKEN}`
+    },
+    body: JSON.stringify({
+      device_id,
+      role: "user",
+      text,
+      symbols: ["SPARK"]   // optional tag you’ve been using
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    bubble(`Send failed: ${res.status} ${t}`, "sys");
+    return;
+  }
+  const msg = await res.json(); // whatever your API returns
+  // show a basic confirmation
+  bubble("Delivered ✨", "sys");
+}
+
+// UI hooks
+document.getElementById("btnRegister").addEventListener("click", register);
+
+document.getElementById("sendForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = textInput.value.trim();
+  if (!text) return;
+  textInput.value = "";
+  await sendMessage(text);
+});
+</script>
+</body>
+</html>
