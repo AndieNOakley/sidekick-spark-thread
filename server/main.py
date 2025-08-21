@@ -9,8 +9,6 @@ from sqlalchemy.orm import Session
 from database import init_db, get_db
 from models import Device, Message
 
-app = FastAPI(title="Sidekick Spark Thread API", version="0.1")
-
 app = FastAPI(
     title="Sidekick Spark Thread API",
     version="0.1",
