@@ -27,6 +27,14 @@
     try{ if(new URLSearchParams(location.search).has('safe')) location.replace('/anchor.html'); }catch(e){}
   })();
 </script>
+<a href="/anchor.html" id="lantern-anchor" aria-label="Lantern Anchor">🏮</a>
+<style>
+  #lantern-anchor{
+    position:fixed; right:14px; bottom:14px; text-decoration:none; font-size:20px;
+    opacity:.35; transition:.2s; z-index:9999; filter: drop-shadow(0 2px 8px rgba(0,0,0,.5));
+  }
+  #lantern-anchor:active, #lantern-anchor:hover{ opacity:.9; transform:translateY(-1px) }
+</style>
 </head>
 <body>
 <div class="wrap">
