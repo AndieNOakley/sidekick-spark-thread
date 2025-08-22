@@ -72,9 +72,10 @@ class MessageOut(BaseModel):
     created_at: str
 
 def auth(db: Session = Depends(get_db), authorization: Optional[str] = Header(None)) -> Device:
-    if not authorization or not authorization.startswith("Bearer "):
+    if not authorization:
         raise HTTPException(401, "Missing token")
-    token = authorization.split(" ", 1)[1]
+    # accept either "Bearer <token>" or raw "<token>"
+    token = authorization.split(" ", 1)[1] if authorization.lower().startswith("bearer ") else authorization
     dev = db.query(Device).filter(Device.token == token).first()
     if not dev:
         raise HTTPException(401, "Invalid token")
@@ -96,19 +97,6 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         db.add(dev)
     db.commit()
     return RegisterOut(access_token=token)
-
-class RegisterIn(BaseModel):
-    device_id: str
-    public_key: str
-
-class TokenOut(BaseModel):
-    access_token: str
-
-@app.post("/auth/register", response_model=TokenOut)
-def register(payload: RegisterIn):
-    token = secrets.token_hex(16)   # generate a token
-    add_token(token)                # mark it valid
-    return TokenOut(access_token=token)
 
 @app.post("/messages/send", response_model=MessageOut)
 def send_message(payload: SendMessageIn, device: Device = Depends(auth), db: Session = Depends(get_db)):
