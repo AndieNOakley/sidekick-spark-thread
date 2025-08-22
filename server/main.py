@@ -97,6 +97,19 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
     db.commit()
     return RegisterOut(access_token=token)
 
+class RegisterIn(BaseModel):
+    device_id: str
+    public_key: str
+
+class TokenOut(BaseModel):
+    access_token: str
+
+@app.post("/auth/register", response_model=TokenOut)
+def register(payload: RegisterIn):
+    token = secrets.token_hex(16)   # generate a token
+    add_token(token)                # mark it valid
+    return TokenOut(access_token=token)
+
 @app.post("/messages/send", response_model=MessageOut)
 def send_message(payload: SendMessageIn, device: Device = Depends(auth), db: Session = Depends(get_db)):
     if payload.role not in ("user", "assistant"):
