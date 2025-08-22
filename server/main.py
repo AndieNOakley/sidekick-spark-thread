@@ -1,4 +1,4 @@
-from auth import require_token
+from auth import require_token, add_token
 from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
