@@ -17,6 +17,15 @@ app = FastAPI(
     openapi_tags=[{"name": "default"}]
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # let any website talk to your API (ok for dev)
+    allow_methods=["*"],
+    allow_headers=["*"],      # important: allows Authorization header
+)
+
 # Add API key security scheme
 from fastapi.openapi.utils import get_openapi
 
